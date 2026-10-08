@@ -1,0 +1,44 @@
+const fs=require('fs'),assert=require('assert');
+const bytes=new ArrayBuffer(4096);
+global.window={__snakeReader:{},__snakeRuntime:{registry:32,core:64,arenaLimit:48},__snakePelletRenderers:[]};
+global.unityInstance={Module:{HEAPU8:new Uint8Array(bytes),HEAPU32:new Uint32Array(bytes),HEAPF32:new Float32Array(bytes)}};
+global.requestAnimationFrame=()=>1;
+eval(fs.readFileSync('src/navigation.js','utf8'));
+eval(fs.readFileSync('src/controller.js','utf8').replace("return 'World-state controller installed';","window.debug={state,pickHarvest,pickPressure,pickDeathSearch,observeRivals,predatorRisk};return 'installed';"));
+const {state,pickHarvest,pickPressure,pickDeathSearch,observeRivals,predatorRisk}=window.debug;
+state.score=28000;state.ownLength=400;state.inputDelay=.15;state.now=1;
+const nav=window.__snakeTopology.analyze(0,0,[],.3,5,.3);
+// A rich drop 30 m away must be found beyond the old local 21 m search window.
+const foods=Array.from({length:12},(_,i)=>({id:i+1,x:30+(i%3)*.3,y:4+Math.floor(i/3)*.3,scale:.1}));
+let drop=pickHarvest(0,0,0,foods,[],nav,5,1000);
+assert(drop&&drop.goal.x>=30&&drop.path.length>20,'Map-wide rich food needs a reachable route');
+assert(!drop.confirmedDeath,'Rich food alone must not invent a known death');
+observeRivals([{head:true,enemy:1,score:35000,x:30,y:4}],[],1000);
+observeRivals([],[],1600);
+assert(state.deathHints.length===1,'A vanished giant must leave a bounded search hint');
+const search=pickDeathSearch(0,0,[],nav,5,1600);
+assert(search&&search.kind==='seek-drop'&&search.path.length>20,'A vanished leader must be investigated even before its pellets are visible');
+drop=pickHarvest(0,0,0,foods,[],nav,5,1600);
+assert(drop.confirmedDeath,'A rich drop on the vanished body should become a confirmed harvest opportunity');
+assert(!pickHarvest(0,0,0,foods,[],{...nav,confined:true},5,1600),'A remote drop must not pull us through a sealed enclosure');
+observeRivals([],[],21000);assert(state.deathHints.length===0,'Unconfirmed/displaced sightings must expire');
+const weak={head:true,enemy:2,x:20,y:0,vx:5,vy:0,score:1000,length:45,tailSeconds:10,radius:2.3,physical:.3,maxSpeed:10};
+assert(predatorRisk(15,0,[weak])===0,'A clearly outmatched snake must not cause strategic retreat');
+assert(predatorRisk(15,0,[{...weak,score:40000,length:500}])>0,'A larger rival must still cause strategic retreat');
+const pressure=pickPressure(0,-12,0,400,28000,[weak],nav,5,10.472,.3,1000);
+assert(pressure&&pressure.enemy===2&&Math.hypot(pressure.goal.x,pressure.goal.y)>10,'Size advantage must produce a forward flank, not a local holding circle');
+assert(!pickPressure(0,-12,0,400,28000,[{...weak,invincible:true}],nav,5,10.472,.3,1000),'Invincible rivals must not be targeted');
+console.log({harvest:drop.goal,rich:drop.rich,confirmed:drop.confirmedDeath,pressure:pressure.goal});
+
+state.priorityRival=3;
+const leader={...weak,enemy:3,score:35000,length:405};
+const contest=pickPressure(0,-12,0,400,28000,[leader],nav,5,10.472,.3,1000);
+assert(contest&&contest.contender&&contest.enemy===3,'A score leader with comparable physical length must be a guarded contest target');
+assert(!pickPressure(0,-12,0,400,28000,[{...leader,length:900}],nav,5,10.472,.3,1000),'A physically overwhelming leader must not be pursued by the flank tactic');
+console.log({contest:contest.goal,leaderScore:contest.enemyScore});
+
+const farLeader={...leader,x:-15,y:30};
+const farNav=window.__snakeTopology.analyze(0,-20,[farLeader],.3,5,.3);
+const approach=pickPressure(0,-20,Math.PI/2,400,28000,[farLeader],farNav,5,10.472,.3,1000);
+assert(approach&&approach.contender&&approach.path.length>25,'A reachable distant leader must get a map route rather than fall outside the local pursuit radius');
+console.log({farApproach:approach.goal,path:approach.path.length});

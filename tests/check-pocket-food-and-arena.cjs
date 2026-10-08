@@ -1,0 +1,16 @@
+const fs=require('fs'),assert=require('assert');const bytes=new ArrayBuffer(4096);
+global.window={__snakeReader:{},__snakeRuntime:{registry:32,core:64,arenaLimit:48},__snakePelletRenderers:[]};global.requestAnimationFrame=()=>1;
+global.unityInstance={Module:{HEAPU8:new Uint8Array(bytes),HEAPU32:new Uint32Array(bytes),HEAPF32:new Float32Array(bytes)}};
+eval(fs.readFileSync('src/navigation.js','utf8'));
+eval(fs.readFileSync('src/controller.js','utf8').replace("return 'World-state controller installed';",'window.debug={state,findPath,safetyPlan};return "ok";'));
+const d=window.debug,n=window.__snakeTopology;d.state.now=1;d.state.inputDelay=.15;
+const ring=[];for(let a=0;a<Math.PI*2;a+=.1)ring.push({x:8*Math.cos(a),y:8*Math.sin(a),x2:8*Math.cos(a+.1),y2:8*Math.sin(a+.1),radius:2,physical:.5,ttl:30,enemy:1});
+const food=[{id:1,x:2,y:0,scale:.05}];
+assert(!d.findPath(0,0,0,ring,.3,food).target,'A normal forage move must not enter an enclosure');
+assert.equal(d.findPath(0,0,0,ring,.3,food,true).target?.id,1,'Already sealed inside, safe reachable food must remain harvestable');
+const open=n.raster([],.3,0);assert.equal(open.largest.area,9025,'Arena geometry must use the supplied measured inner boundary');
+const legalEdge=d.safetyPlan(46.5,0,Math.PI/2,5,10.472,[],.3,Math.PI/2,{x:46.5,y:25});
+assert(legalEdge.safeContinuation,'A legal route within the measured outer strip must remain usable');
+const wall=d.safetyPlan(47,0,0,5,10.472,[],.3,0,{x:50,y:0});
+assert(!wall.safeContinuation&&wall.queuedUnsafe,'Measured wall geometry must still reject an unavoidable queued collision');
+console.log({sealedFood:1,openArea:open.largest.area,edgeClearance:legalEdge.minimum,wallUnsafe:wall.queuedUnsafe});

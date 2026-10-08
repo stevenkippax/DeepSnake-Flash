@@ -1,0 +1,11 @@
+const fs=require('fs'),assert=require('assert');global.window={__snakeRuntime:{arenaLimit:48}};
+eval(fs.readFileSync('src/navigation.js','utf8'));
+const T=window.__snakeTopology;
+const obs=[{x:-25,y:-48,x2:-25,y2:-6,radius:4.1,physical:1.3,ttl:100,enemy:1},{x:-25,y:6,x2:-25,y2:48,radius:4.1,physical:1.3,ttl:100,enemy:1}];
+const nav=T.analyze(-35,0,obs,1.3,5,.15);
+console.log({current:nav.currentArea,wide:nav.wideArea,accessibleWide:nav.wideAccessibleArea,pinched:nav.pinched,exit:nav.escapePath.at(-1),path:nav.escapePath.length});
+assert(nav.wideArea>500,'The fixture must be a spacious pocket beyond the old arbitrary cutoff');
+assert(nav.pinched&&nav.escapePath.length,'A large pocket with a narrow neck must receive an early exit route');
+assert(nav.escapePath.at(-1).x>-25,'The route must cross the narrowing neck into the larger open component');
+const open=T.analyze(-35,0,[],1.3,5,.15);
+assert(!open.pinched,'Open map space must not trigger an unnecessary bottleneck evacuation');

@@ -1,0 +1,18 @@
+const fs=require('fs'),assert=require('assert');
+const bytes=new ArrayBuffer(4096);global.window={__snakeReader:{},__snakeRuntime:{registry:32,core:64,arenaLimit:48},__snakePelletRenderers:[]};
+global.unityInstance={Module:{HEAPU8:new Uint8Array(bytes),HEAPU32:new Uint32Array(bytes),HEAPF32:new Float32Array(bytes)}};global.requestAnimationFrame=()=>1;
+eval(fs.readFileSync('src/navigation.js','utf8'));
+eval(fs.readFileSync('src/controller.js','utf8').replace("return 'World-state controller installed';","window.debug={state,safetyPlan,pickIntercept};return 'installed';"));
+const {state,safetyPlan,pickIntercept}=window.debug;state.inputDelay=.15;state.now=1;
+const guide={kind:'path',points:Array.from({length:25},(_,i)=>({x:i+1,y:0}))};
+const obs=[{x:5,y:1.5,x2:25,y2:1.5,radius:1,physical:.3,enemy:1,ttl:100}];
+const move=safetyPlan(0,0,0,5,10.472,obs,.3,0,{x:25,y:0},guide,5,false,null,true);
+assert(move.safeContinuation&&Math.abs(move.angle)<.01,'A committed forward command must survive whenever a full positive-clearance continuation exists');
+const wall=[{x:2,y:-40,x2:2,y2:40,radius:1,physical:.3,enemy:1,ttl:100}];
+const denied=safetyPlan(0,0,0,5,10.472,wall,.3,0,{x:25,y:0},guide,5,false,null,true);
+assert(!denied.safeContinuation,'Commitment must not fabricate a certificate through an unexpired barrier');
+const head={head:true,x:0,y:0,vx:5,vy:0,radius:2.3,physical:.3,maxSpeed:10,enemy:2,score:70000,length:400,tailSeconds:80};
+const interception=pickIntercept(0,-22,Math.PI/2,5,10.472,[head],.3,400);
+assert(interception&&interception.boostSeconds>1.5,'A reachable receding leader must be allowed a checked longer interception burst');
+assert(interception.arrival<=interception.tau-interception.lead,'Longer bursts must still arrive ahead of the head with the required reserve');
+console.log({committed:{angle:move.angle,min:move.minimum},blocked:denied.safeContinuation,interception:{tau:interception.tau,arrival:interception.arrival,boost:interception.boostSeconds}});

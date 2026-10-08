@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DeepSnake Flash</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+<header><svg aria-hidden="true" viewBox="0 0 48 48"><path d="M10 34V18a8 8 0 0 1 16 0v14a6 6 0 0 0 12 0V15"/><path class="bolt" d="m29 4-8 12h8l-4 11 13-15h-9z"/></svg><div><h1>DeepSnake <span>Flash</span></h1><p>Fast thinking. More scales.</p></div></header>
+<div class="status"><i id="status-dot"></i><span id="status" role="status" aria-live="polite">Checking active tab…</span></div>
+<section class="score" aria-label="Live score"><p>LIVE SCORE</p><strong id="score">—</strong><div>Best <span id="best">—</span><span class="mode" id="mode">Awaiting game</span></div></section>
+<div class="controls"><button id="start">Start autopilot</button><button id="stop" class="secondary" disabled>Stop</button></div>
+<p id="help">Load Snake.io, arm the autopilot, then choose normal Play. Close this panel so the game has focus.</p>
+<button id="export" class="link" disabled>Download run data ↗</button>
+<footer><span>Runs locally in your browser</span><a href="https://github.com/stevenkippax/DeepSnake-Flash" target="_blank" rel="noreferrer">Source</a></footer>
+</main><script src="bridge.js"></script><script src="popup.js"></script></body></html>

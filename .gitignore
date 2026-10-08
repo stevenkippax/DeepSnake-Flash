@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+dist/
+extension/runtime/
+extension/LICENSE
+extension/INSTALL.txt
+*.log
+.qa/

@@ -1,0 +1,6 @@
+const fs=require('fs');const bytes=new ArrayBuffer(4096);global.window={__snakeReader:{},__snakeRuntime:{registry:32,core:64,arenaLimit:48},__snakePelletRenderers:[]};global.unityInstance={Module:{HEAPU8:new Uint8Array(bytes),HEAPU32:new Uint32Array(bytes),HEAPF32:new Float32Array(bytes)}};global.requestAnimationFrame=()=>1;
+eval(fs.readFileSync('src/navigation.js','utf8'));eval(fs.readFileSync('src/controller.js','utf8').replace("return 'World-state controller installed';","window.debug={findPath,predatorRisk};return 'installed';"));
+const data=JSON.parse(fs.readFileSync('tests/fixtures/food-route-probe.json','utf8')),r=data.replay,n=window.__snakeTopology.analyze(r.x,r.y,r.obs,r.radius,r.speed,r.inputDelay+.15);
+const viable=r.foods.filter(o=>window.debug.predatorRisk(o.x,o.y,r.obs)<1&&(window.__snakeTopology.regionAt(n.future,o.x,o.y)?.area??0)>=Math.max(80,n.largestAccessibleFutureArea*.3));
+const args=[r.x,r.y,r.heading,r.obs,r.radius];
+console.log({foods:r.foods.length,viable:viable.length,filtered:window.debug.findPath(...args,viable,n.waiting).target,raw:window.debug.findPath(...args,r.foods,n.waiting).target,currentHazards:window.__snakeTopology.dangerAt(r.x,r.y,r.obs),navigation:{area:n.currentArea,waiting:n.waiting}});

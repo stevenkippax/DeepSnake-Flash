@@ -1,0 +1,10 @@
+const fs=require('fs'),assert=require('assert');global.window={};eval(fs.readFileSync('src/navigation.js','utf8'));const n=window.__snakeTopology;
+const tiny={x:0,y:0,vx:5,vy:0,radius:1,head:true,tailSeconds:.5};
+assert(n.headClearance(tiny,0,0,.25)<0,'Recent trail remains blocked');
+assert(n.headClearance(tiny,0,0,2)>6,'An old tiny-snake trail must move away');
+assert(n.headClearance(tiny,9,0,2)<0,'Current head and recent body remain blocked');
+const giant={...tiny,tailSeconds:100};assert(n.headClearance(giant,0,0,2)<0,'Long bodies must retain their trail');
+const tail=[{x:-5,y:0,x2:5,y2:0,radius:2,ttl:1}];
+assert(n.raster(tail,.3,1).clear[n.index(0,0)]<0,'Tail must remain until its expiry plus timing cushion');
+assert(n.raster(tail,.3,2).clear[n.index(0,0)]>0,'Known expired body must stop blocking future space');
+console.log('Tail timing checks passed');

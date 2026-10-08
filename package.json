@@ -1,0 +1,1 @@
+{"name":"deep-snake-flash","version":"1.0.0","private":true,"description":"A browser-local Snake.io autopilot that reached 50,000+ from normal Play.","license":"MIT","scripts":{"test":"node scripts/test.cjs","build":"node scripts/build.cjs"},"engines":{"node":">=20"}}
